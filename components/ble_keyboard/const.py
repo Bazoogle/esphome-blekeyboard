@@ -60,7 +60,7 @@ LIBS_DEFAULT: Final = [
 LIBS_ADDITIONAL: Final = [
     (
         "h2zero/NimBLE-Arduino",
-        "1.4.1",
+        "2.3.6",
         None,
     ),
     (
