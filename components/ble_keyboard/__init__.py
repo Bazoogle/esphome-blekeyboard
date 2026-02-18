@@ -77,11 +77,14 @@ CONFIG_SCHEMA: Final = cv.Schema(
 )
 
 
-async def to_code(configs: list[dict]) -> None:
+async def to_code(configs: list[dict] | dict) -> None:
     """Generate component
 
     :param configs: list of dicts (one per keyboard)
     """
+
+    if isinstance(configs, dict):
+        configs = [configs]
 
     if not CORE.is_esp32:
         raise cv.Invalid("The component only supports ESP32.")
