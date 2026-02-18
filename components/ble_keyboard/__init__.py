@@ -62,18 +62,22 @@ BLEKeyboardNumber = ble_keyboard_ns.class_(COMPONENT_NUMBER_CLASS, cg.Component)
 BLEKeyboardButton = ble_keyboard_ns.class_(COMPONENT_BUTTON_CLASS, cg.Component)
 
 MULTI_CONF = True
-CONFIG_SCHEMA: Final = cv.Schema(
-    {
-        cv.GenerateID(): cv.declare_id(BLEKeyboard),
-        cv.Optional(CONF_NAME, default=COMPONENT_CLASS): cv.Length(min=1),
-        cv.Optional(CONF_MANUFACTURER_ID, default=COMPONENT_CLASS): cv.Length(min=1),
-        cv.Optional(CONF_BATTERY_LEVEL, default=100): cv.int_range(min=0, max=100),
-        cv.Optional(CONF_RECONNECT, default=True): cv.boolean,
-        cv.Optional(CONF_ADVERTISE_ON_START, default=True): cv.boolean,
-        cv.Optional(CONF_USE_DEFAULT_LIBS, default=False): cv.boolean,
-        cv.Optional(CONF_BUTTONS, default=True): cv.boolean,
-        cv.Optional(CONF_PAIRING_CODE, default=123456): cv.int_range(min=0, max=999999),
-    }
+CONFIG_SCHEMA: Final = cv.All(
+    cv.ensure_list(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.declare_id(BLEKeyboard),
+                cv.Optional(CONF_NAME, default=COMPONENT_CLASS): cv.Length(min=1),
+                cv.Optional(CONF_MANUFACTURER_ID, default=COMPONENT_CLASS): cv.Length(min=1),
+                cv.Optional(CONF_BATTERY_LEVEL, default=100): cv.int_range(min=0, max=100),
+                cv.Optional(CONF_RECONNECT, default=True): cv.boolean,
+                cv.Optional(CONF_ADVERTISE_ON_START, default=True): cv.boolean,
+                cv.Optional(CONF_USE_DEFAULT_LIBS, default=False): cv.boolean,
+                cv.Optional(CONF_BUTTONS, default=True): cv.boolean,
+                cv.Optional(CONF_PAIRING_CODE, default=123456): cv.int_range(min=0, max=999999),
+            }
+        )
+    )
 )
 
 
@@ -93,6 +97,13 @@ async def to_code(configs: list[dict] | dict) -> None:
         raise cv.Invalid("The component only supports the Arduino framework.")
         
     for config in configs:
+        # DEBUG: Add this to see what you're actually receiving
+        print(f"Config type: {type(config)}, Config value: {config}")
+        
+        # Add a check to skip non-dict items or handle them properly
+        if not isinstance(config, dict):
+            continue
+            
         var = cg.new_Pvariable(
             config[CONF_ID],
             config[CONF_NAME],
