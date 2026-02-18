@@ -77,10 +77,10 @@ CONFIG_SCHEMA: Final = cv.Schema(
 )
 
 
-async def to_code(config: dict) -> None:
+async def to_code(configs: list[dict]) -> None:
     """Generate component
 
-    :param config: dict
+    :param configs: list of dicts (one per keyboard)
     """
 
     if not CORE.is_esp32:
@@ -88,26 +88,27 @@ async def to_code(config: dict) -> None:
 
     if not CORE.using_arduino:
         raise cv.Invalid("The component only supports the Arduino framework.")
+        
+    for config in configs:
+        var = cg.new_Pvariable(
+            config[CONF_ID],
+            config[CONF_NAME],
+            config[CONF_MANUFACTURER_ID],
+            config[CONF_BATTERY_LEVEL],
+            config[CONF_RECONNECT],
+            config[CONF_ADVERTISE_ON_START],
+            config[CONF_PAIRING_CODE],
+        )
 
-    var = cg.new_Pvariable(
-        config[CONF_ID],
-        config[CONF_NAME],
-        config[CONF_MANUFACTURER_ID],
-        config[CONF_BATTERY_LEVEL],
-        config[CONF_RECONNECT],
-        config[CONF_ADVERTISE_ON_START],
-        config[CONF_PAIRING_CODE],
-    )
-
-    await cg.register_component(var, config)
-
-    await adding_binary_sensors(var)
-    await adding_numbers(var)
-
-    if config[CONF_BUTTONS]:
-        await adding_buttons(var)
-
-    adding_dependencies(config[CONF_USE_DEFAULT_LIBS])
+        await cg.register_component(var, config)
+    
+        await adding_binary_sensors(var)
+        await adding_numbers(var)
+    
+        if config[CONF_BUTTONS]:
+            await adding_buttons(var)
+    
+        adding_dependencies(config[CONF_USE_DEFAULT_LIBS])
 
 
 async def adding_buttons(var: MockObj) -> None:
