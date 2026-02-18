@@ -89,8 +89,8 @@ async def to_code(configs: list[dict]) -> None:
 
     for config in configs:
         var = cg.new_Pvariable(
-            config[CONF_ID],
             config[CONF_NAME],
+            config[CONF_ID],
             config[CONF_MANUFACTURER_ID],
             config[CONF_BATTERY_LEVEL],
             config[CONF_RECONNECT],
