@@ -61,43 +61,33 @@ BLEKeyboard = ble_keyboard_ns.class_(COMPONENT_CLASS, cg.PollingComponent)
 BLEKeyboardNumber = ble_keyboard_ns.class_(COMPONENT_NUMBER_CLASS, cg.Component)
 BLEKeyboardButton = ble_keyboard_ns.class_(COMPONENT_BUTTON_CLASS, cg.Component)
 
-SINGLE_KEYBOARD_SCHEMA = cv.Schema({
-    cv.GenerateID(): cv.declare_id(BLEKeyboard),
-    cv.Optional(CONF_NAME, default=COMPONENT_CLASS): cv.Length(min=1),
-    cv.Optional(CONF_MANUFACTURER_ID, default=COMPONENT_CLASS): cv.Length(min=1),
-    cv.Optional(CONF_BATTERY_LEVEL, default=100): cv.int_range(min=0, max=100),
-    cv.Optional(CONF_RECONNECT, default=True): cv.boolean,
-    cv.Optional(CONF_ADVERTISE_ON_START, default=True): cv.boolean,
-    cv.Optional(CONF_USE_DEFAULT_LIBS, default=False): cv.boolean,
-    cv.Optional(CONF_BUTTONS, default=True): cv.boolean,
-    cv.Optional(CONF_PAIRING_CODE, default=123456): cv.int_range(min=0, max=999999),
-})
+CONFIG_SCHEMA: Final = cv.ensure_list(
+    cv.Schema(
+        {
+            cv.GenerateID(): cv.declare_id(BLEKeyboard),
+            cv.Optional(CONF_NAME, default=COMPONENT_CLASS): cv.Length(min=1),
+            cv.Optional(CONF_MANUFACTURER_ID, default=COMPONENT_CLASS): cv.Length(min=1),
+            cv.Optional(CONF_BATTERY_LEVEL, default=100): cv.int_range(min=0, max=100),
+            cv.Optional(CONF_RECONNECT, default=True): cv.boolean,
+            cv.Optional(CONF_ADVERTISE_ON_START, default=True): cv.boolean,
+            cv.Optional(CONF_USE_DEFAULT_LIBS, default=False): cv.boolean,
+            cv.Optional(CONF_BUTTONS, default=True): cv.boolean,
+            cv.Optional(CONF_PAIRING_CODE, default=123456): cv.int_range(min=0, max=999999),
+        }
+    ).extend(cv.COMPONENT_SCHEMA)
+)
 
-CONFIG_SCHEMA: Final = cv.ensure_list(SINGLE_KEYBOARD_SCHEMA)
-
-async def to_code(configs: list[dict] | dict) -> None:
-    """Generate component
-
-    :param configs: list of dicts (one per keyboard)
-    """
-
-    if isinstance(configs, dict):
-        configs = [configs]
-
+async def to_code(configs: list[dict]) -> None:
     if not CORE.is_esp32:
         raise cv.Invalid("The component only supports ESP32.")
 
     if not CORE.using_arduino:
         raise cv.Invalid("The component only supports the Arduino framework.")
-        
+
+    # Add deps once
+    adding_dependencies(any(c[CONF_USE_DEFAULT_LIBS] for c in configs))
+
     for config in configs:
-        # DEBUG: Add this to see what you're actually receiving
-        print(f"Config type: {type(config)}, Config value: {config}")
-        
-        # Add a check to skip non-dict items or handle them properly
-        if not isinstance(config, dict):
-            continue
-            
         var = cg.new_Pvariable(
             config[CONF_ID],
             config[CONF_NAME],
@@ -109,14 +99,12 @@ async def to_code(configs: list[dict] | dict) -> None:
         )
 
         await cg.register_component(var, config)
-    
+
         await adding_binary_sensors(var)
         await adding_numbers(var)
-    
+
         if config[CONF_BUTTONS]:
             await adding_buttons(var)
-    
-        adding_dependencies(config[CONF_USE_DEFAULT_LIBS])
 
 
 async def adding_buttons(var: MockObj) -> None:
