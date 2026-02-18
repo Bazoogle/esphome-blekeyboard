@@ -61,7 +61,6 @@ BLEKeyboard = ble_keyboard_ns.class_(COMPONENT_CLASS, cg.PollingComponent)
 BLEKeyboardNumber = ble_keyboard_ns.class_(COMPONENT_NUMBER_CLASS, cg.Component)
 BLEKeyboardButton = ble_keyboard_ns.class_(COMPONENT_BUTTON_CLASS, cg.Component)
 
-MULTI_CONF = True
 SINGLE_KEYBOARD_SCHEMA = cv.Schema({
     cv.GenerateID(): cv.declare_id(BLEKeyboard),
     cv.Optional(CONF_NAME, default=COMPONENT_CLASS): cv.Length(min=1),
